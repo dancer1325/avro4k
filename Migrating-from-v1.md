@@ -1,16 +1,14 @@
-Here is the guide of how to migrate from Avro4k v1 to v2 using examples.
-
-> [!INFO]
-> If you are missing a migration need, please [file an issue](https://github.com/avro-kotlin/avro4k/issues/new/choose) or [make a PR](https://github.com/avro-kotlin/avro4k/compare).
+* goal
+  * how to migrate from Avro4k v1 -- to -- v2
 
 ## Pure avro serialization
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 val bytes = Avro.default.encodeToByteArray(TheDataClass.serializer(), TheDataClass(...))
 Avro.default.decodeFromByteArray(TheDataClass.serializer(), bytes)
 
-// Now
+// NOW
 val bytes = Avro.encodeToByteArray(TheDataClass(...))
 Avro.decodeFromByteArray<TheDataClass>(bytes)
 ```
@@ -18,13 +16,13 @@ Avro.decodeFromByteArray<TheDataClass>(bytes)
 ## Set a field default value to null
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 data class TheDataClass(
     @AvroDefault(Avro.NULL)
     val field: String?
 )
 
-// Now
+// NOW
 data class TheDataClass(
     // ... Nothing, as it is the default behavior!
     val field: String?
@@ -41,13 +39,13 @@ data class TheDataClass(
 ## Set a field default value to empty array
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 data class TheDataClass(
     @AvroDefault("[]")
     val field: List<String>
 )
 
-// Now
+// NOW
 data class TheDataClass(
     // ... Nothing, as it is the default behavior!
     val field: List<String>
@@ -64,13 +62,13 @@ data class TheDataClass(
 ## Set a field default value to empty map
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 data class TheDataClass(
     @AvroDefault("{}")
     val field: Map<String, String>
 )
 
-// Now
+// NOW
 data class TheDataClass(
     // ... Nothing, as it is the default behavior!
     val field: Map<String, String>
@@ -88,11 +86,11 @@ data class TheDataClass(
 Convert a kotlin data class to a `GenericRecord` to then be handled by a `GenericDatumWriter` in avro.
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 val genericRecord: GenericRecord = Avro.default.toRecord(TheDataClass.serializer(), TheDataClass(...))
 Avro.default.fromRecord(TheDataClass.serializer(), genericRecord)
 
-// Now
+// NOW
 val genericData: Any? = Avro.encodeToGenericData(TheDataClass(...))
 Avro.decodeFromGenericData<TheDataClass>(genericData)
 ```
@@ -100,7 +98,7 @@ Avro.decodeFromGenericData<TheDataClass>(genericData)
 ## Configure the `Avro` instance
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 val avro = Avro(
     AvroConfiguration(
         namingStrategy = FieldNamingStrategy.SnackCase,
@@ -111,7 +109,7 @@ val avro = Avro(
     }
 )
 
-// Now
+// NOW
 val avro = Avro {
     namingStrategy = FieldNamingStrategy.SnackCase
     implicitNulls = true
@@ -124,12 +122,12 @@ val avro = Avro {
 ## Changing the name of a record
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 @AvroName("TheName")
 @AvroNamespace("a.custom.namespace")
 data class TheDataClass(...)
 
-// Now
+// NOW
 @SerialName("a.custom.namespace.TheName")
 data class TheDataClass(...)
 ```
@@ -137,7 +135,7 @@ data class TheDataClass(...)
 ## Writing an avro object container file with a custom field naming strategy
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 Files.newOutputStream(Path("/your/file.avro")).use { outputStream ->
     Avro(AvroConfiguration(namingStrategy = SnakeCaseNamingStrategy))
         .openOutputStream(TheDataClass.serializer()) { encodeFormat = AvroEncodeFormat.Data(CodecFactory.snappyCodec()) }
@@ -149,7 +147,7 @@ Files.newOutputStream(Path("/your/file.avro")).use { outputStream ->
 }
 
 
-// Now
+// NOW
 val dataSequence = sequenceOf(
     TheDataClass(...),
     TheDataClass(...),
@@ -169,16 +167,16 @@ Files.newOutputStream(Path("/your/file.avro")).use { outputStream ->
 }
 ```
 
-## Reading previously written binary encoded (`AvroEncodeFormat.Binary`) files
+## Reading PREVIOUSLY written binary encoded (`AvroEncodeFormat.Binary`) files
 
 It was possible to use the `AvroEncodeFormat.Binary` format, which used [binary encoding](https://avro.apache.org/docs/current/spec.html#binary_encoding). The data did not have an embedded schema, so it had to be specified when reading.
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 Avro.default.openInputStream(serializer) { decodeFormat = AvroDecodeFormat.Binary(schema) }
     .from(data).use { avroInputStream -> return avroInputStream.nextOrThrow() }
 
-// Now
+// NOW
 val inputStream = ByteArrayInputStream(data)
 while (inputStream.remaining() > 0) {
     // If the writer schema corresponds to the specified type
@@ -199,7 +197,7 @@ If you really want to encode a `BYTES` type, just use the `ByteArray` type or wr
 For encoding to `FIXED`, then just use the `ByteArray` type with the `AvroFixed` annotation (or still write your own serializer).
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 @Serializable
 data class TheDataClass(
     val collectionOfBytes: List<Byte>,
@@ -207,7 +205,7 @@ data class TheDataClass(
     val setOfBytes: List<Byte>,
 )
 
-// Now
+// NOW
 @Serializable
 data class TheDataClass(
     val collectionOfBytes: ByteArray,
@@ -223,14 +221,14 @@ data class TheDataClass(
 > which is already compatible with the `@AvroStringable` feature.
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 @Serializable
 data class MyData(
     @Serializable(with = BigDecimalAsStringSerializer::class)
     val bigDecimalAsString: BigDecimal,
 )
 
-// Now
+// NOW
 @Serializable
 data class MyData(
     @Contextual
@@ -241,14 +239,14 @@ data class MyData(
 
 ## Serialize a `BigDecimal` as a BYTES or FIXED
 
-Previously, a BigDecimal was serialized as bytes with 2 as scale and 8 as precision. Now you have to explicitly declare the needed scale and precision using `@AvroDecimal`, 
+PREVIOUSLY, a BigDecimal was serialized as bytes with 2 as scale and 8 as precision. NOW you have to explicitly declare the needed scale and precision using `@AvroDecimal`, 
 or use `@AvroStringable` to serialize it as a string which doesn't need scale nor precision.
 
 > [!INFO]
 > Note that you can replace `@Serializable(with = BigDecimalSerializer::class)` with `@Contextual` to use the default global `BigDecimalSerializer` already registered.
 
 ```kotlin
-// Previously
+// PREVIOUSLY
 @Serializable
 data class MyData(
     @Serializable(with = BigDecimalSerializer::class)
@@ -258,7 +256,7 @@ data class MyData(
     val bigDecimalAsFixed: BigDecimal,
 )
 
-// Now
+// NOW
 @Serializable
 data class MyData(
     @Contextual

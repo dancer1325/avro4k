@@ -5,24 +5,31 @@
 
 # Introduction
 
-**Avro4k** (or Avro for Kotlin) is a library that brings [Avro](https://avro.apache.org/) serialization format in kotlin, based on the **reflection-less** kotlin library
-called [kotlinx-serialization](https://github.com/Kotlin/kotlinx.serialization).
-
-Here are the main features:
-
-- **Full avro support**, including logical types, unions, recursive types, and schema evolution :white_check_mark:
-- **Encode and decode** anything to and from binary format, and also in generic data :toolbox:
-- **Generate schemas** based on your values and data classes :pencil:
-- **Customize** the generated schemas and encoded data with annotations :construction_worker:
-- **Fast** as it is reflection-less :rocket: (check the benchmarks [here](benchmark/README.md#results))
-- **Simple API** to get started quickly, also with native support of java standard classes like `UUID`, `BigDecimal`, `BigInteger` and `java.time` module :1st_place_medal:
-- **Relaxed matching** for easy schema evolution as it natively [adapts compatible types](#types-matrix) :cyclone:
-- **Kafka confluent's schema registry ready** thanks to the [confluent-kafka-serializer module](confluent-kafka-serializer/README.md), allowing to use avro4k in any kafka or spring cloud project :white_check_mark:
-- **Official gradle plugin** to generate (not only) data classes from avro schemas :wrench: (check the [gradle-plugin](gradle-plugin/README.md) documentation for more details)
-
-> [!WARNING]
-> **Important**: As of today, avro4k is **only available for JVM platform**, and theoretically for android platform (as apache avro library is already **android-ready**). <br/>If
-> you would like to have js/wasm/native compatible platforms, please put a :thumbsup: on [this issue](https://github.com/avro-kotlin/avro4k/issues/207)
+* **Avro4k** / Avro for Kotlin
+  * == library / 
+    * brings [Avro](https://avro.apache.org/) serialization format -- , via [kotlinx-serialization](https://github.com/Kotlin/kotlinx.serialization), -- | kotlin
+  * 's features
+    * **Full avro support**,
+      * TODO: including logical types, unions, recursive types, and schema evolution
+    * **Encode and decode**
+      * anything -- to & from -- binary format
+      * | generic data
+    * **Generate schemas** 
+      * -- based on -- your values & data classes
+    * **Customize** 
+      * the generated schemas and encoded data with annotations :construction_worker:
+    * **Fast**
+      * as it is reflection-less :rocket: (check the benchmarks [here](benchmark/README.md#results))
+    * **Simple API** 
+      * to get started quickly, also with native support of java standard classes like `UUID`, `BigDecimal`, `BigInteger` and `java.time` module :1st_place_medal:
+    * **Relaxed matching** 
+      * for easy schema evolution as it natively [adapts compatible types](#types-matrix) :cyclone:
+    * **Kafka confluent's schema registry ready**
+      * thanks to the [confluent-kafka-serializer module](confluent-kafka-serializer/README.md), allowing to use avro4k in any kafka or spring cloud project :white_check_mark:
+    * **Official gradle plugin** to generate (not only) data classes from avro schemas :wrench: (check the [gradle-plugin](gradle-plugin/README.md) documentation for more details)
+  * ⚠️constraints⚠️
+    * JVM platform
+    * android platform
 
 # Quick start
 
@@ -469,13 +476,25 @@ yourAvroInstance.schema<Pizza>()
 
 ## Customizing the configuration
 
-By default, `Avro` is configured with the following behavior:
-- `implicitNulls`: The nullable fields are considered null when decoding if the writer record's schema does not contain this field.
-- `implicitEmptyCollections`: The non-nullable map and collection fields are considered empty when decoding if the writer record's schema does not contain this field.
-  - If `implicitNulls` is true, it takes precedence so the empty collections are set as null if the value is missing instead of an empty collection.
-- `validateSerialization`: There is no validation of the schema when encoding or decoding data, which means that serializing using a custom serializer could lead to unexpected behavior. Be careful with your custom serializers. More details [in this section](#set-a-custom-schema).
-- `fieldNamingStrategy`: The record's field naming strategy is using the original kotlin field name. To change it, [check this section](#changing-records-field-name).
-- `logicalTypes`: Indicates how a logical type should be deserialized when decoding generically to `Any`. Check this section for more details: [generic decoding](#generic-decoding-for-decoding-a-type-that-is-not-known-at-compile-time).
+* default `Avro` configuration behavior
+  * `implicitNulls`
+    * if the writer record's schema does NOT contain this field -> | decode, the nullable fields are considered NULL  
+  * `implicitEmptyCollections`
+    * The non-nullable map and collection fields are considered empty when decoding if the writer record's schema does not contain this field.
+    * If `implicitNulls` is true, it takes precedence so the empty collections are set as null if the value is missing instead of an empty collection.
+  * `validateSerialization`
+    * There is no validation of the schema when encoding or decoding data, which means that serializing using a custom serializer could lead to unexpected behavior
+    * Be careful with your custom serializers. More details [in this section](#set-a-custom-schema).
+  * `fieldNamingStrategy`
+    * The record's field naming strategy is using the original kotlin field name
+    * To change it, [check this section](#changing-records-field-name).
+  * `logicalTypes`
+    * Indicates how a logical type should be deserialized when decoding generically to `Any`
+    * Check this section for more details: [generic decoding](#generic-decoding-for-decoding-a-type-that-is-not-known-at-compile-time).
+
+- nullable fields are optional and `default: null` is automatically added to the field definition.
+- array fields are optional and `default: []` is automatically added to the field definition.
+- map fields are optional and `default: {}` is automatically added to the field definition.
 
 So each time you call a method on the `Avro` object implicitely invoke the default configuration. Example:
 
@@ -770,15 +789,13 @@ val schema = myCustomizedAvroInstance.schema<MyData>() // {...,"fields":[{"name"
 
 ## Set a default field value
 
-While reading avro binary data, you can miss a field (a kotlin field is present but not in the avro binary data), so Avro4k fails as it is not capable of constructing the kotlin
-type without the missing field value.
+* use case  
+  * field | kotlin, BUT NOT field | avro
+    * -> ❌Avro4k is NOT capable of constructing the kotlin type❌
 
-By default ([check this section](#customizing-the-configuration) to opt out from this default behavior):
-- nullable fields are optional and `default: null` is automatically added to the field definition.
-- array fields are optional and `default: []` is automatically added to the field definition.
-- map fields are optional and `default: {}` is automatically added to the field definition.
+* [default Avro behavior](#customizing-the-configuration)
 
-### @AvroDefault
+### `@AvroDefault`
 
 To avoid this error, you can set a default value for a field by annotating it with `@AvroDefault`:
 
